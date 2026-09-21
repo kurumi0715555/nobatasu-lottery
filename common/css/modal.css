@@ -1,0 +1,191 @@
+/* ==========================================================================
+   modal.css — NOBATASU Tools 統一モーダルコンポーネント
+   common-modal.js が生成する DOM に対応するスタイル。
+   色・spacing・radius は variables.css の Foundation トークンのみ使用する。
+
+   ボタンは基本的に既存 .btn クラス（common/css/components.css）の見た目に
+   委ねるが、bingo/host.php のように components.css を読み込まない黒板テーマの
+   独立ページが存在するため、.nbt-modal-footer .btn は自己完結の フォールバック
+   スタイルとしてここでも定義する（components.css 非依存でも正しく表示される
+   ようにするため）。
+
+   フォールバックは `@layer nbt-modal-fallback` に入れている。CSS の
+   カスケードレイヤーは「無レイヤーの規則は、名前付きレイヤーの規則より常に
+   優先される」ため、components.css（無レイヤー）を読み込むページでは
+   従来どおりそちらの装飾（グラデーション・shine演出等）が優先され、
+   components.css が存在しない bingo では、このレイヤーのフォールバックだけが
+   適用される。詳細度の勝負にしない設計にすることで、二重定義による既存ページ
+   の見た目変化を避けている。
+   ========================================================================== */
+
+.nbt-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.nbt-modal-backdrop--visible {
+    opacity: 1;
+}
+
+.nbt-modal {
+    background: var(--white);
+    width: 480px;
+    max-width: 100%;
+    max-height: calc(100vh - var(--spacing-xxl) * 2);
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: var(--transition-smooth);
+}
+
+.nbt-modal-backdrop--visible .nbt-modal {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.nbt-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.nbt-modal-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.nbt-modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5em;
+    line-height: 1;
+    color: var(--gray-darker);
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-small);
+    transition: var(--transition-smooth);
+}
+
+.nbt-modal-close:hover {
+    color: var(--text-color);
+    background: var(--gray-lighter);
+}
+
+.nbt-modal-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    color: var(--text-color);
+    line-height: 1.7;
+}
+
+.nbt-modal-message {
+    margin: 0;
+    white-space: pre-line;
+}
+
+.nbt-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    border-top: 1px solid var(--gray-light);
+}
+
+/* --------------------------------------------------------------------------
+   フッターボタンの自己完結フォールバックスタイル（components.css 非依存）
+   values は common/css/components.css の .btn / .btn-primary / .btn-secondary /
+   .btn-danger と視覚的に一致させている（グラデーションや光沢演出は簡略化）。
+   @layer に入れることで、components.css（無レイヤー）読込ページでは常に
+   components.css 側が優先される。
+   -------------------------------------------------------------------------- */
+@layer nbt-modal-fallback {
+    .nbt-modal-footer .btn {
+        padding: 12px 24px;
+        min-height: 44px;
+        border: 1px solid transparent;
+        border-radius: var(--border-radius);
+        font-size: 1em;
+        font-weight: 600;
+        font-family: var(--font-family);
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        line-height: 1.2;
+        box-shadow: var(--shadow-small);
+        text-decoration: none;
+    }
+
+    .nbt-modal-footer .btn-primary {
+        background: var(--primary-color);
+        color: var(--white);
+    }
+
+    .nbt-modal-footer .btn-primary:hover {
+        background: var(--secondary-color);
+        transform: translateY(-2px);
+    }
+
+    .nbt-modal-footer .btn-secondary {
+        background: var(--surface-color, var(--white));
+        border-color: var(--border-color, var(--gray));
+        color: var(--accent-color);
+    }
+
+    .nbt-modal-footer .btn-secondary:hover {
+        background: var(--gray-lighter);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+
+    .nbt-modal-footer .btn-danger {
+        background: var(--danger-color);
+        color: var(--white);
+    }
+
+    .nbt-modal-footer .btn-danger:hover {
+        background: #B63E39;
+        transform: translateY(-2px);
+    }
+
+    .nbt-modal-footer .btn:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring, 0 0 0 3px rgba(0, 96, 100, 0.25)), var(--shadow-small);
+    }
+
+    .nbt-modal-footer .btn:active {
+        transform: translateY(1px) scale(0.98);
+    }
+}
+
+@media (max-width: 480px) {
+    .nbt-modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .nbt-modal-footer .btn {
+        width: 100%;
+    }
+}

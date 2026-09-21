@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="description" content="授業やイベントで使える公平な抽選Webアプリ。名前・番号・班での抽選に対応し、ランダム指名ツールとしても活用できます。全員1周モード・直前スキップ・発言済みマーク搭載でドラムロール演出も。全画面表示対応。">
+    
+    
+    <link rel="stylesheet" href="common/css/common.css">
+    <link rel="stylesheet" href="common/css/modal.css">
+    <link rel="stylesheet" href="common/css/landscape-guard.css">
+    <link rel="stylesheet" href="common/css/class-mode.css">
+    <link rel="stylesheet" href="common/css/ads.css">
+    <link rel="stylesheet" href="css/lottery.css">
+    <link rel="stylesheet" href="common/vendor/fontawesome/css/fontawesome.css">
+<link rel="stylesheet" href="common/vendor/fontawesome/css/solid.css">
+<title>抽選ツール</title>
+<link rel="stylesheet" href="oss/standalone.css">
+<script defer src="oss/standalone.js"></script>
+</head>
+
+<body>
+    <!-- 授業モード切り替えボタン -->
+    <button id="classModeToggle" class="class-mode-toggle">
+        <i id="classModeIcon" class="fas fa-chalkboard"></i>
+        <span id="classModeText">授業モード OFF</span>
+    </button>
+
+    <div class="site-wrapper">
+        <!-- 左側広告エリア -->
+        <aside class="ad-left">
+            <!-- Ads injected by common-ads.js -->
+        </aside>
+
+        <div class="container">
+            <header>
+                <!-- Header banner will be injected by common-header.js -->
+                <h1><i class="fas fa-ticket-alt"></i> 抽選ツール</h1>
+                <p class="subtitle">授業やイベントで使える公平な抽選システム</p>
+            </header>
+
+            <main>
+                <!-- 抽選モード選択 -->
+                <div class="mode-selection">
+                    <h3><i class="fas fa-list-check"></i> 抽選モード</h3>
+                    <div class="mode-options">
+                        <label class="mode-option">
+                            <input type="radio" name="lotteryMode" value="name" id="nameMode" checked>
+                            <span class="mode-label">
+                                <i class="fas fa-user"></i> 名前で抽選
+                            </span>
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="lotteryMode" value="number" id="numberMode">
+                            <span class="mode-label">
+                                <i class="fas fa-hashtag"></i> 番号で抽選
+                            </span>
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="lotteryMode" value="group" id="groupMode">
+                            <span class="mode-label">
+                                <i class="fas fa-users-rectangle"></i> 班で抽選
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- オプションセクション（指名ツール向け補助機能） -->
+                <div class="option-section">
+                    <h3><i class="fas fa-sliders"></i> オプション</h3>
+                    <p class="hint">
+                        <i class="fas fa-lightbulb"></i>
+                        指名ツールとして使うときの便利機能です。授業中の発言指名に活用してください。
+                    </p>
+                    <div class="option-list">
+                        <label class="option-item">
+                            <input type="checkbox" id="fullRoundMode">
+                            <span class="option-label">
+                                <strong>全員1周モード</strong>
+                                <span class="option-desc">全員（または全班）が1回ずつ当たるまで重複させません。終わると「全員終わりました」と表示します。</span>
+                            </span>
+                        </label>
+                        <label class="option-item">
+                            <input type="checkbox" id="skipLastMode">
+                            <span class="option-label">
+                                <strong>直前と同じ人を避ける</strong>
+                                <span class="option-desc">直前に当てた1人（または1班）を次回の候補から外します。連続指名を防止できます。</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 名前入力エリア -->
+                <div id="nameInputSection" class="input-section">
+                    <h3><i class="fas fa-users"></i> 参加者リスト</h3>
+                    <textarea id="nameList" class="name-input"
+                        placeholder="参加者の名前を入力してください&#13;&#10;（1行に1名、エクセルから貼り付けもOK）&#13;&#10;&#13;&#10;例:&#13;&#10;田中太郎&#13;&#10;鈴木花子&#13;&#10;佐藤次郎&#13;&#10;山田美咲"></textarea>
+
+                    <div class="input-actions">
+                        <button id="loadSampleBtn" class="btn btn-secondary">
+                            <i class="fas fa-file-import"></i> サンプルを読み込む
+                        </button>
+                        <button id="clearAllBtn" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> 全て削除
+                        </button>
+                    </div>
+
+                    <div class="participant-info">
+                        <span id="totalCount" class="info-badge">参加者: 0名</span>
+                        <span id="remainingCount" class="info-badge">残り: 0名</span>
+                    </div>
+                </div>
+
+                <!-- 番号入力エリア -->
+                <div id="numberInputSection" class="input-section" style="display: none;">
+                    <h3><i class="fas fa-hashtag"></i> 番号設定</h3>
+                    <div class="number-input-group">
+                        <label for="maxNumber">最大番号:</label>
+                        <input type="number" id="maxNumber" class="number-input" min="1" max="999" value="30"
+                            placeholder="例: 30">
+                        <span class="number-hint">1 ～ <span id="maxNumberDisplay">30</span> の範囲で抽選します</span>
+                    </div>
+
+                    <div class="input-actions">
+                        <button id="resetNumberBtn" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> 番号をリセット
+                        </button>
+                    </div>
+
+                    <div class="participant-info">
+                        <span id="numberTotalCount" class="info-badge">範囲: 1～30</span>
+                        <span id="numberRemainingCount" class="info-badge">残り: 30個</span>
+                    </div>
+                </div>
+
+                <!-- 班入力エリア -->
+                <div id="groupInputSection" class="input-section" style="display: none;">
+                    <h3><i class="fas fa-users-rectangle"></i> 班設定</h3>
+                    <p class="hint">
+                        <i class="fas fa-info-circle"></i>
+                        班の数を指定すると、1班〜指定班数までの中からランダムに1班を選びます。
+                    </p>
+                    <div class="number-input-group">
+                        <label for="maxGroup">班の数:</label>
+                        <input type="number" id="maxGroup" class="number-input" min="2" max="10" value="6"
+                            placeholder="例: 6">
+                        <span class="number-hint">1班 ～ <span id="maxGroupDisplay">6</span>班 の中から抽選します</span>
+                    </div>
+
+                    <div class="input-actions">
+                        <button id="resetGroupBtn" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> 班をリセット
+                        </button>
+                    </div>
+
+                    <div class="participant-info">
+                        <span id="groupTotalCount" class="info-badge">範囲: 1班～6班</span>
+                        <span id="groupRemainingCount" class="info-badge">残り: 6班</span>
+                    </div>
+                </div>
+
+                <!-- スロット抽選エリア -->
+                <div class="lottery-section">
+                    <h3><i class="fas fa-dice"></i> 抽選結果</h3>
+
+                    <!-- スロットマシン -->
+                    <div class="slot-machine">
+                        <div class="slot-container">
+                            <div id="slotReel" class="slot-reel">
+                                <div class="slot-item">?</div>
+                            </div>
+                        </div>
+                        <!-- 全画面表示ボタン -->
+                        <button id="fullscreenBtn" class="fullscreen-btn">
+                            <i class="fas fa-expand"></i> 全画面表示
+                        </button>
+                    </div>
+
+                    <!-- コントロールボタン -->
+                    <div class="control-buttons">
+                        <button id="startBtn" class="btn btn-primary btn-large">
+                            <i class="fas fa-play"></i> 抽選スタート
+                        </button>
+                        <button id="resetLotteryBtn" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> 抽選リセット
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 抽選履歴 -->
+                <div class="history-section">
+                    <h3><i class="fas fa-history"></i> 抽選履歴</h3>
+                    <div id="historyList" class="history-list">
+                        <p class="empty-message">まだ抽選が行われていません</p>
+                    </div>
+                </div>
+
+                <!-- 使い方 -->
+                <div class="instructions">
+                    <h3><i class="fas fa-info-circle"></i> 使い方</h3>
+                    <ol>
+                        <li><strong>モードを選ぶ</strong>：「名前」「番号」「班」から用途に合わせて選択</li>
+                        <li><strong>入力</strong>：名前リスト・最大番号・班数のいずれかを入力</li>
+                        <li><strong>抽選スタート</strong>：ボタンを押すとスロットが回転して1つ選ばれます</li>
+                        <li><strong>連続抽選</strong>：もう一度押すと、選ばれていない候補から抽選されます</li>
+                        <li><strong>抽選リセット</strong>：当選履歴をリセット（全員が再度対象になります）</li>
+                        <li><strong>指名ツール用途</strong>：オプションの「全員1周モード」「直前と同じ人を避ける」をONにすれば、授業中の発言指名にぴったりです</li>
+                        <li><strong>発言済みマーク</strong>：履歴の各人にある「✓発言済み」ボタンで、誰が話したかチェックできます</li>
+                    </ol>
+                    <p class="note"><i class="fas fa-lightbulb"></i>
+                        <strong>ヒント</strong>：授業モードをONにすると広告が非表示になり、生徒が見やすくなります。
+                    </p>
+                </div>
+            </main>
+
+            <!-- メインとフッターの間の横長広告 -->
+            <div class="ad-horizontal">
+                <div class="ad-label">広告</div>
+                <div class="ad-horizontal-content">
+                    <i class="fas fa-rectangle-ad"></i>
+                    <p>728×90 レクタングル（大）バナー広告</p>
+                </div>
+            </div>
+
+            <footer>
+                <!-- Footer will be injected by common-footer.js -->
+            </footer>
+        </div>
+
+        <!-- 右側広告エリア -->
+        <aside class="ad-right">
+            <!-- Ads injected by common-ads.js -->
+        </aside>
+    </div>
+
+    <!-- 全画面表示オーバーレイ -->
+    <div id="fullscreenOverlay" class="fullscreen-overlay">
+        <button id="exitFullscreenBtn" class="exit-fullscreen-btn">
+            <i class="fas fa-times"></i> 終了
+        </button>
+
+        <div class="fullscreen-lottery">
+            <div id="fullscreenSlotContainer" class="fullscreen-slot-container">
+                <div id="fullscreenSlotReel" class="fullscreen-slot-reel stopped">
+                    <div class="fullscreen-slot-item">?</div>
+                </div>
+            </div>
+
+            <div class="fullscreen-controls">
+                <button id="fsStartBtn" class="fs-btn">
+                    <i class="fas fa-play"></i> 抽選スタート
+                </button>
+                <button id="fsResetBtn" class="fs-btn">
+                    <i class="fas fa-redo"></i> リセット
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="common/js/class-mode.js"></script>
+    <script src="common/js/common-modal.js"></script>
+    
+    
+    
+    
+    
+    <script type="module" src="dist/lottery.js"></script>
+    <script src="common/js/landscape-guard.js"></script>
+</body>
+
+</html>
